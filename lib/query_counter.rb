@@ -74,7 +74,7 @@ module QueryCounter
 def #{new_method_name}(*args)
   started_at = Time.now
   result = #{original_method_name_with_alias}(*args)
-  ::QueryCounter.record(#{resource.inspect}, (Time.now - started_at) / 1_000.0)
+  ::QueryCounter.record(#{resource.inspect}, (Time.now - started_at) * 1_000.0)
   result
 end
 STR
