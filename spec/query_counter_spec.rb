@@ -19,6 +19,14 @@ describe QueryCounter do
   end
   let(:instrument_resource) { instrument_resource_proc.call }
 
+  let(:db_client_class) do
+    Class.new do
+      def query!(sql)
+      end
+    end
+  end
+  let(:db_client) { db_client_class.new }
+
   context 'record' do
     subject { QueryCounter.record(resource, 0.1) }
 
@@ -97,6 +105,20 @@ describe QueryCounter do
         expect(outside_collector.events(resource).size).to eq(num_resource_calls + 4)
         expect(QueryCounter.current_collector.events(resource).size).to eq(0)
       end
+    end
+  end
+
+  context 'auto_instrument!' do
+    before(:each) do
+      QueryCounter.auto_instrument!(resource, db_client_class, :query!)
+    end
+
+    subject { db_client.query!('select * from bars') }
+
+    it 'automatically wraps the method in insturmentation' do
+      expect {
+        subject
+      }.to change { QueryCounter.count(resource) }.by(1)
     end
   end
 end

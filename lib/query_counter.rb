@@ -58,4 +58,27 @@ module QueryCounter
       ::QueryCounter.record_event(resource, ActiveSupport::Notifications::Event.new(*args))
     end
   end
+
+  def self.auto_instrument!(resource, kls, method_name)
+    method_name = method_name.to_s
+    if method_name =~ /^(.*?)([!\?])$/
+      method_name = $1
+      punctuation = $2
+    else
+      punctuation = ''
+    end
+
+    original_method_name_with_alias = "#{method_name}_without_instrumentation#{punctuation}"
+    new_method_name = "#{method_name}_with_instrumentation#{punctuation}"
+    kls.class_eval <<STR
+def #{new_method_name}(*args)
+  started_at = Time.now
+  result = #{original_method_name_with_alias}(*args)
+  ::QueryCounter.record(#{resource.inspect}, (Time.now - started_at) / 1_000.0)
+  result
+end
+STR
+    kls.send(:alias_method, original_method_name_with_alias, method_name + punctuation)
+    kls.send(:alias_method, method_name + punctuation, new_method_name)
+  end
 end
