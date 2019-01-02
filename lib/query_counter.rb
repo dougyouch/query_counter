@@ -1,6 +1,8 @@
 module QueryCounter
   autoload :Collector, 'query_counter/collector'
   autoload :Global, 'query_counter/global'
+  autoload :Middleware, 'query_counter/middleware'
+  autoload :RequestHelper, 'query_counter/request_helper'
   autoload :Stat, 'query_counter/stat'
 
   def self.global_collector
