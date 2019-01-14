@@ -31,6 +31,12 @@ module QueryCounter
     current_collector.reset
   end
 
+  def self.collect
+    Thread.current[:starting_gc_count] = GC.count
+    Thread.current[:starting_count_objects] = ObjectSpace.count_objects
+    reset
+  end
+
   def self.around
     new_collector = ::QueryCounter::Collector.new
     old_collector, Thread.current[:temporary_query_counter_collector] = Thread.current[:temporary_query_counter_collector], new_collector
