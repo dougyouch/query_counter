@@ -5,6 +5,11 @@ module QueryCounter
   autoload :RequestHelper, 'query_counter/request_helper'
   autoload :Stat, 'query_counter/stat'
 
+  @@callbacks = {}
+  def self.callbacks
+    @@callbacks
+  end
+
   def self.global_collector
     ::QueryCounter::Global.instance
   end
@@ -60,14 +65,16 @@ module QueryCounter
     current_collector.count(resource)
   end
 
-  def self.auto_subscribe!(resource, event_name)
+  def self.auto_subscribe!(resource, event_name, &block)
     require 'active_support/notifications'
     ActiveSupport::Notifications.subscribe(event_name) do |*args|
       ::QueryCounter.record_event(resource, ActiveSupport::Notifications::Event.new(*args))
     end
   end
 
-  def self.auto_instrument!(resource, kls, method_name)
+  def self.auto_instrument!(resource, kls, method_name, &block)
+    callback_name = "#{resource}.#{method_name}"
+
     method_name = method_name.to_s
     if method_name =~ /^(.*?)([!\?])$/
       method_name = $1
@@ -76,10 +83,13 @@ module QueryCounter
       punctuation = ''
     end
 
+    callbacks[callback_name] = block if block
+
     original_method_name_with_alias = "#{method_name}_without_instrumentation#{punctuation}"
     new_method_name = "#{method_name}_with_instrumentation#{punctuation}"
     kls.class_eval <<STR
 def #{new_method_name}(*args)
+  QueryCounter.callbacks[#{callback_name.inspect}].call(args) if QueryCounter.callbacks.has_key?(#{callback_name})
   started_at = Time.now
   result = #{original_method_name_with_alias}(*args)
   ::QueryCounter.record(#{resource.inspect}, (Time.now - started_at) * 1_000.0)
