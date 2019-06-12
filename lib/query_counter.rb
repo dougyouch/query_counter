@@ -89,7 +89,7 @@ module QueryCounter
     new_method_name = "#{method_name}_with_instrumentation#{punctuation}"
     kls.class_eval <<STR
 def #{new_method_name}(*args)
-  QueryCounter.callbacks[#{callback_name.inspect}].call(args) if QueryCounter.callbacks.has_key?(#{callback_name})
+  ::QueryCounter.callbacks[#{callback_name.inspect}].call(args) if ::QueryCounter.callbacks.has_key?(#{callback_name.inspect})
   started_at = Time.now
   result = #{original_method_name_with_alias}(*args)
   ::QueryCounter.record(#{resource.inspect}, (Time.now - started_at) * 1_000.0)
