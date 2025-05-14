@@ -66,7 +66,7 @@ module QueryCounter
   end
 
   def self.auto_subscribe!(resource, event_name, &block)
-    require 'active_support/notifications'
+    require 'active_support'
     ActiveSupport::Notifications.subscribe(event_name) do |*args|
       ::QueryCounter.record_event(resource, ActiveSupport::Notifications::Event.new(*args))
     end
