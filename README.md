@@ -1,6 +1,10 @@
 # QueryCounter
 
-A Ruby gem for monitoring and counting requests to external systems. This gem provides tools to track the number and duration of external calls in your application.
+A Ruby gem designed to help troubleshoot performance bottlenecks by tracking and analyzing external system requests. This gem provides detailed insights into API calls by monitoring:
+- Which resources are being accessed
+- How many times each resource is called
+- Total time spent on each resource
+- Timing information for individual requests
 
 ## Features
 
@@ -10,6 +14,8 @@ A Ruby gem for monitoring and counting requests to external systems. This gem pr
 - Thread-safe operation
 - Automatic instrumentation of methods
 - Temporary collectors for specific code blocks
+- Rack middleware for automatic request tracking
+- Detailed resource usage summaries
 
 ## Installation
 
@@ -24,6 +30,23 @@ And then execute:
 ```bash
 $ bundle install
 ```
+
+## Rails Integration
+
+To enable automatic request tracking in a Rails application, add the middleware to your `config/application.rb`:
+
+```ruby
+module YourApp
+  class Application < Rails::Application
+    # ... other configuration ...
+    
+    # Add QueryCounter middleware after the Rails logger
+    config.middleware.use QueryCounter::Middleware
+  end
+end
+```
+
+The middleware will automatically track all external requests during each web request and provide a summary in your logs.
 
 ## Usage
 
@@ -69,6 +92,22 @@ QueryCounter.auto_instrument!('external_api', MyClass, :fetch_data) do |args|
   # Custom handling if needed
 end
 ```
+
+### Analyzing Resource Usage
+
+The gem provides detailed insights into resource usage. For example, in a Rails application with the middleware enabled, you'll see log output like:
+
+```
+QueryCounter Summary:
+  - external_api: 5 calls, total time: 1500ms
+  - database: 12 calls, total time: 800ms
+  - cache: 3 calls, total time: 50ms
+```
+
+This helps identify:
+- Which resources are being called most frequently
+- Which resources are taking the most time
+- Potential bottlenecks in your application
 
 ## Development
 
