@@ -2,7 +2,8 @@
 
 Gem::Specification.new do |s|
   s.name        = 'query_counter'
-  s.version     = '0.2.5'
+  s.version     = '0.2.6'
+  s.licenses    = ['MIT']
   s.summary     = 'Count requests to external systems'
   s.description = 'Used for monitoring number of external calls'
   s.authors     = ['Doug Youch']
